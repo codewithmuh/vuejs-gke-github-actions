@@ -1,0 +1,53 @@
+
+name: Build Workflow
+
+
+on:
+    workflow_run:
+        workflows: 
+            - Sonar Code Review Workflow
+        types:
+            - completed
+
+jobs:
+  build-push-image:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}"
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Install kubectl
+        run: gcloud components install kubectl
+
+      - name: Check kubectl version
+        run: kubectl version --client
+
+      - name: Use gcloud CLI
+        run: gcloud info
+
+      - name: Docker auth
+        run: gcloud auth configure-docker us-west2-docker.pkg.dev --quiet
+
+      - name: Set version
+        id: version
+        #run: echo "::set-output name=VERSION::$(git rev-parse --short HEAD)"
+        run: echo "VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+
+      - name: Build and push the docker image
+        env:
+          GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          DOCKER_IMAGE="us-west2-docker.pkg.dev/${GOOGLE_PROJECT}/frontend/codewithmuh:${VERSION}"
+          gcloud auth configure-docker us-central1-docker.pkg.dev
+          docker build -t $DOCKER_IMAGE .
+          docker push $DOCKER_IMAGE

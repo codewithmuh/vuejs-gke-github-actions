@@ -1,0 +1,29 @@
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: codewithmuh
+# spec:
+#   type: LoadBalancer
+#   selector:
+#     app: codewithmuh
+#   ports:
+#   - port: 80
+#     targetPort: 80
+
+
+apiVersion: v1
+kind: Service
+metadata: 
+  name: codewithmuh
+  labels: 
+    name: codewithmuh
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  selector: 
+    name: codewithmuh
+    version: "VERSION"
+  type: LoadBalancer

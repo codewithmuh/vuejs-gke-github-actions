@@ -1,0 +1,81 @@
+name: Deploy on GKE WorkFlow
+
+on:
+    workflow_run:
+        workflows: 
+            - Trivy Image Scan
+        types:
+            - completed
+
+jobs:     
+  blue-green-deployment:
+    name: Deploy To GKE
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}"
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Install gke-gcloud-auth-plugin
+        run: gcloud components install kubectl
+
+      - name: Check gke-gcloud-auth-plugin
+        run: kubectl version --client
+
+      - name: Use gcloud CLI
+        run: gcloud info
+
+      - name: Docker auth
+        run: |
+          gcloud auth configure-docker us-west2-docker.pkg.dev --quiet
+
+      - name: Set version
+        id: version
+        #run: echo "::set-output name=VERSION::$(git rev-parse --short HEAD)"
+        run: echo "VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+
+      - name: Deploy to GKE
+        env:
+          GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          # Set the GKE cluster credentials
+          gcloud container clusters get-credentials autopilot-cluster-3 --region us-central1
+          sed -i "s/GOOGLE_PROJECT/$GOOGLE_PROJECT/g; s/VERSION/$VERSION/g" kubernetes/deployment-blue-green.yaml
+          # Deploy the green version
+          kubectl apply -f kubernetes/deployment-blue-green.yaml
+          sleep 300
+          sed -i "s/VERSION/$VERSION/g" kubernetes/service.yaml
+          kubectl apply -f kubernetes/service.yaml
+          # Wait for the deployment to be ready
+          kubectl rollout status deployment codewithmuh-blue-green-${VERSION}
+          sleep 80
+      - name: Cleanup old deployments
+        env:
+          GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        run: |
+            # Get the names of all deployments
+            all_deployments=$(kubectl get deployments -o json --sort-by="{.metadata.creationTimestamp}" | jq -r '.items[].metadata.name')
+        
+            # Get the names of the two latest deployments
+            latest_deployments=$(echo "$all_deployments" | tail -n 2)
+        
+            # Get the names of deployments excluding the two latest
+            old_deployments=$(comm -23 <(echo "$all_deployments" | sort) <(echo "$latest_deployments" | sort))
+        
+            # Delete all deployments except the two latest
+            for deployment in $old_deployments; do
+              # kubectl scale deployment $deployment --replicas=0
+              kubectl delete deployment $deployment
+            done
+    
+
+

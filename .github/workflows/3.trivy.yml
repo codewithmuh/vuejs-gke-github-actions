@@ -1,0 +1,36 @@
+name: Trivy Image Scan
+
+on:
+    workflow_run:
+        workflows: 
+            - Build Workflow
+        types:
+            - completed
+
+jobs:
+  docker-image-scan:
+    name: Docker Image Scan
+    runs-on: self-hosted
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4.1.1
+        
+
+      - name: Set version
+        id: version
+        #run: echo "::set-output name=VERSION::$(git rev-parse --short HEAD)"
+        run: echo "VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Pull the Docker image From GCR
+        env:
+          GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: docker pull us-west2-docker.pkg.dev/$GOOGLE_PROJECT/frontend/codewithmuh:${VERSION}
+
+  
+      - name: Trivy image scan
+        env:
+          GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: trivy image us-west2-docker.pkg.dev/$GOOGLE_PROJECT/frontend/codewithmuh:${VERSION}
+   

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codewithmuh-blue-green-VERSION
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      name: codewithmuh
+      version: "VERSION"
+  template:
+    metadata:
+      labels:
+        name: codewithmuh
+        version: "VERSION"
+    spec:
+      containers:
+        - name: codewithmuh
+          image: us-west2-docker.pkg.dev/GOOGLE_PROJECT/frontend/codewithmuh:VERSION
+          ports:
+            - name: http
+              containerPort: 80
