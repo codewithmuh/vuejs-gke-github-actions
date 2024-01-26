@@ -12,6 +12,15 @@ We will deploy the Vuejs Application on Google Kubernetes Engine (GKE). We will 
 ### Prerequisite
 You should have basic Knowledge of Google Kubernetes Engine (GKE), Docker, Kubernetes, and GitHub Actions.
 
+### Youtube Video Tutorial: Coming soon
+
+### Artilce Link: Coming Soon
+## Support
+<a href="https://www.buymeacoffee.com/codewithmuh" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-yellow.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+
+### Prerequisite
+You should have basic Knowledge of AWS services, Docker, Kubernetes, and GitHub Actions.
+
 ### Table of Content/Steps:
 
 **1.** Dockerize Vuejs Application with Nginx for Production
@@ -37,6 +46,10 @@ You should have basic Knowledge of Google Kubernetes Engine (GKE), Docker, Kuber
 **11.** Deploy to GKE 
 
 
+
+
+## Acknowledgements
+Special thanks to codewithmuh for creating this incredible Devops Project and simplifying the CI/CD process.
 
 
 
