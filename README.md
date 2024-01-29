@@ -1,3 +1,6 @@
+### Hit the Star! ⭐
+If you are planning to use this repo for reference, please hit the star. Thanks!
+
 # Deploy Vuejs Application on Google Kubernetes Engine (GKE) - Blue Green Deployment.
 I will use GitHub Actions to deploy our VueJS project on Google Kubernetes Engine (GKE).
 
